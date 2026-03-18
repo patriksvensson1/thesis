@@ -1,0 +1,17 @@
+{
+  "sequence_length": 12,
+  "feature_columns": [
+    "return_1",
+    "return_3",
+    "return_6",
+    "oc_change",
+    "hl_range",
+    "volume_change_1",
+    "volatility_6"
+  ],
+  "train_end_time": "2025-07-25 17:15:00+00:00",
+  "val_end_time": "2025-11-07 18:45:00+00:00",
+  "n_train_sequences": 82513,
+  "n_val_sequences": 18350,
+  "n_test_sequences": 18931
+}

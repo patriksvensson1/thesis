@@ -1,0 +1,17 @@
+SYMBOLS = [
+    "AAPL.US",
+    "MSFT.US",
+    "NVDA.US",
+    "AMZN.US",
+    "GOOGL.US",
+    "NFLX.US",
+    "WBD.US",
+    "TSLA.US",
+    "NDAQ.US",
+    "SBUX.US",
+    "ADBE.US",
+    "META.US",
+    "NKE.US",
+    "CRM.US",
+    "PYPL.US",
+]
