@@ -1,5 +1,5 @@
 {
-  "sequence_length": 12,
+  "sequence_length": 8,
   "feature_columns": [
     "return_1",
     "return_3",
@@ -11,7 +11,7 @@
   ],
   "train_end_time": "2025-07-25 17:15:00+00:00",
   "val_end_time": "2025-11-07 18:45:00+00:00",
-  "n_train_sequences": 82513,
-  "n_val_sequences": 18350,
-  "n_test_sequences": 18931
+  "n_train_sequences": 82573,
+  "n_val_sequences": 18410,
+  "n_test_sequences": 18991
 }

@@ -15,7 +15,7 @@ INPUT_FILE = "LSTM_Training/lstm_dataset_M15.csv"
 OUTPUT_DIR = Path("trained_lstm")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-SEQUENCE_LENGTH = 12
+SEQUENCE_LENGTH = 8
 TRAIN_RATIO = 0.70
 VAL_RATIO = 0.15
 BATCH_SIZE = 64

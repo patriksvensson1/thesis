@@ -20,61 +20,123 @@ def get_gdelt_json_with_retry(
 ) -> dict:
     """
     Try the GDELT request up to max_retries times.
-    Wait at least min_wait_seconds between attempts.
-    If GDELT responds with 429 and a Retry-After header, use that instead.
+    Wait between attempts.
+    Handle:
+    - 429 rate limits
+    - empty bodies
+    - non-JSON responses
+    - invalid JSON
     """
-
-    last_error = None
 
     for attempt in range(1, max_retries + 1):
         try:
+            ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+            print(f"[{ts}] Requesting GDELT for {symbol} (attempt {attempt}/{max_retries})")
+
             response = session.get(base_url, params=params, timeout=timeout)
+
+            content_type = response.headers.get("Content-Type", "")
+            body_preview = response.text[:200].replace("\n", " ").replace("\r", " ")
 
             if response.status_code == 429:
                 retry_after = response.headers.get("Retry-After")
                 wait_seconds = float(retry_after) if retry_after else min_wait_seconds
-                print(
-                    f"GDELT rate limit hit for {symbol} "
-                    f"(attempt {attempt}/{max_retries}). "
-                    f"Sleeping {wait_seconds} seconds..."
-                )
-                time.sleep(wait_seconds)
-                continue
+
+                if attempt < max_retries:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] GDELT rate limit hit for {symbol} "
+                        f"(attempt {attempt}/{max_retries}). "
+                        f"Sleeping {wait_seconds} seconds..."
+                    )
+                    time.sleep(wait_seconds)
+                    continue
+                else:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] GDELT rate limit hit for {symbol} "
+                        f"after {max_retries} attempts."
+                    )
+                    return {"articles": []}
 
             response.raise_for_status()
-            return response.json()
+
+            if not response.text.strip():
+                if attempt < max_retries:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Empty response from GDELT for {symbol} "
+                        f"(attempt {attempt}/{max_retries}). "
+                        f"Sleeping {min_wait_seconds} seconds..."
+                    )
+                    time.sleep(min_wait_seconds)
+                    continue
+                else:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Empty response from GDELT for {symbol} "
+                        f"after {max_retries} attempts."
+                    )
+                    return {"articles": []}
+
+            if "json" not in content_type.lower():
+                if attempt < max_retries:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Non-JSON response from GDELT for {symbol} "
+                        f"(Content-Type: {content_type}). "
+                        f"Body preview: {body_preview!r}. "
+                        f"Sleeping {min_wait_seconds} seconds..."
+                    )
+                    time.sleep(min_wait_seconds)
+                    continue
+                else:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Non-JSON response from GDELT for {symbol} "
+                        f"after {max_retries} attempts. "
+                        f"Body preview: {body_preview!r}"
+                    )
+                    return {"articles": []}
+
+            try:
+                return response.json()
+            except ValueError as e:
+                if attempt < max_retries:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Invalid JSON from GDELT for {symbol} "
+                        f"(attempt {attempt}/{max_retries}): {e}. "
+                        f"Body preview: {body_preview!r}. "
+                        f"Sleeping {min_wait_seconds} seconds..."
+                    )
+                    time.sleep(min_wait_seconds)
+                    continue
+                else:
+                    ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
+                    print(
+                        f"[{ts}] Invalid JSON from GDELT for {symbol} "
+                        f"after {max_retries} attempts: {e}. "
+                        f"Body preview: {body_preview!r}"
+                    )
+                    return {"articles": []}
 
         except requests.RequestException as e:
-            last_error = e
-
             if attempt < max_retries:
+                ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
                 print(
-                    f"GDELT request failed for {symbol} "
+                    f"[{ts}] GDELT request failed for {symbol} "
                     f"(attempt {attempt}/{max_retries}): {e}. "
-                    f"Retrying in {min_wait_seconds} seconds..."
+                    f"Sleeping {min_wait_seconds} seconds..."
                 )
                 time.sleep(min_wait_seconds)
             else:
+                ts = datetime.now(timezone.utc).strftime("%H:%M:%S")
                 print(
-                    f"GDELT request failed for {symbol} "
+                    f"[{ts}] GDELT request failed for {symbol} "
                     f"after {max_retries} attempts: {e}"
                 )
-
-        except ValueError as e:
-            last_error = e
-
-            if attempt < max_retries:
-                print(
-                    f"Invalid JSON from GDELT for {symbol} "
-                    f"(attempt {attempt}/{max_retries}): {e}. "
-                    f"Retrying in {min_wait_seconds} seconds..."
-                )
-                time.sleep(min_wait_seconds)
-            else:
-                print(
-                    f"Invalid JSON from GDELT for {symbol} "
-                    f"after {max_retries} attempts: {e}"
-                )
+                return {"articles": []}
 
     return {"articles": []}
 
@@ -87,21 +149,11 @@ def fetch_gdelt_news(
     article_store: Optional[dict[str, list[dict]]] = None,
     active_window_hours: int = 24,
     max_retries: int = 6,
-    min_wait_seconds: float = 6.0,
+    min_wait_seconds: float = 9.0,
 ) -> dict[str, list[dict]]:
     """
     Fetch recent GDELT news, deduplicate by URL, and maintain a rolling
     per-symbol article store that can later be used for decay.
-
-    seen_urls:
-        URLs already ingested before, used only for deduplication.
-
-    article_store:
-        Rolling memory of recent articles per symbol.
-        This is what decay logic should use later, not seen_urls.
-
-    Returns:
-        article_store filtered to the active time window.
     """
 
     if seen_urls is None:
@@ -111,21 +163,21 @@ def fetch_gdelt_news(
         article_store = {symbol: [] for symbol in symbols}
 
     search_terms = {
-        "AAPL.US": '"Apple Inc" OR AAPL',
-        "MSFT.US": '"Microsoft" OR MSFT',
-        "NVDA.US": '"NVIDIA" OR NVDA',
-        "AMZN.US": '"Amazon" OR AMZN',
-        "GOOGL.US": '"Google" OR Alphabet OR GOOGL',
-        "NFLX.US": '"Netflix" OR NFLX',
-        "WBD.US": '"Warner Bros Discovery" OR WBD',
-        "TSLA.US": '"Tesla" OR TSLA',
-        "NDAQ.US": '"Nasdaq" OR NDAQ',
-        "SBUX.US": '"Starbucks Corporation" OR SBUS',
-        "ADBE.US": '"Adobe" OR ADBE',
-        "META.US": '"Meta Platforms" OR "MMeta Platforms Technologies" OR "Facebook"',
-        "NKE.US": '"Nike" OR NKE',
-        "CRM.US": '"Salesforce" OR CRM',
-        "PYPL.US": '"PayPal" OR PYPL',
+        "AAPL.US": '("Apple Inc" OR AAPL)',
+        "MSFT.US": '(Microsoft OR MSFT)',
+        "NVDA.US": '(NVIDIA OR NVDA)',
+        "AMZN.US": '("Amazon Inc" OR AMZN)',
+        "GOOGL.US": '(Google OR Alphabet OR GOOGL)',
+        "NFLX.US": '(Netflix OR NFLX)',
+        "WBD.US": '("Warner Bros Discovery" OR WBD)',
+        "TSLA.US": '(Tesla OR TSLA)',
+        "NDAQ.US": '(Nasdaq OR NDAQ)',
+        "SBUX.US": '("Starbucks Corporation" OR Starbucks OR SBUX)',
+        "ADBE.US": '(Adobe OR ADBE)',
+        "META.US": '("Meta Platforms" OR "Meta Platforms Inc" OR Facebook)',
+        "NKE.US": '(Nike OR NKE)',
+        "CRM.US": '(Salesforce OR CRM)',
+        "PYPL.US": '(PayPal OR PYPL)',
     }
 
     base_url = "https://api.gdeltproject.org/api/v2/doc/doc"
@@ -141,7 +193,10 @@ def fetch_gdelt_news(
     )
 
     for symbol in symbols:
-        query = search_terms.get(symbol, symbol.split(".")[0])
+        base_query = search_terms.get(symbol, f'({symbol.split(".")[0]})')
+
+        # Restrict to English-language source articles
+        query = f"{base_query} AND sourcelang:english"
 
         params = {
             "query": query,
@@ -186,7 +241,6 @@ def fetch_gdelt_news(
             except ValueError:
                 continue
 
-            # Never keep articles older than the active decay window
             if article_time < cutoff:
                 continue
 
@@ -204,20 +258,17 @@ def fetch_gdelt_news(
             article_store[symbol].append(cleaned_article)
             seen_urls.add(url)
 
-        # Prune old articles so decay later only sees recent window
         article_store[symbol] = [
             article
             for article in article_store[symbol]
             if article.get("seen_at_utc") is not None and article["seen_at_utc"] >= cutoff
         ]
 
-        # Keep newest first
         article_store[symbol].sort(
             key=lambda x: x["seen_at_utc"],
             reverse=True,
         )
 
-        # Sleep between symbols to avoid hammering the API
         time.sleep(min_wait_seconds)
 
     return article_store
