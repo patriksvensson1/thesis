@@ -1,7 +1,7 @@
 import MetaTrader5 as mt5
 
-STOP_LOSS_PCT = 0.004   # 0.4%
-TAKE_PROFIT_PCT = 0.005 # 0.6%
+STOP_LOSS_PCT = 0.003   # 0.3%
+TAKE_PROFIT_PCT = 0.005 # 0.5%
 
 # 2h holding time and 15-minute cycle -> at most 8 overlapping trades
 MAX_OPEN_TRADES = 8

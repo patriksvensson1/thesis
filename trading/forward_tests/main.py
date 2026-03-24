@@ -24,7 +24,6 @@ from trader import execute_best_trade
 # Strategy run window in U.S. market time
 EASTERN_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
-BROKER_TZ = ZoneInfo("Europe/Nicosia")
 
 START_HOUR = 9
 START_MINUTE = 30
@@ -199,13 +198,18 @@ def get_next_run_time(interval_minutes: int) -> datetime:
 def sleep_until_next_run(interval_minutes: int) -> None:
     """
     Sleep until the next scheduled run time.
+    Prints the next run in local PC time.
     """
     next_run = get_next_run_time(interval_minutes)
     now_et = datetime.now(EASTERN_TZ)
     sleep_seconds = (next_run - now_et).total_seconds()
 
     if sleep_seconds > 0:
-        print(f"Sleeping until next cycle at {next_run.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        next_run_local = next_run.astimezone()  # PC local timezone
+        print(
+            f"Sleeping until next cycle at "
+            f"{next_run_local.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
         time.sleep(sleep_seconds)
 
 
