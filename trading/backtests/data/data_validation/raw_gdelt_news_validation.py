@@ -58,29 +58,29 @@ def main():
 
     print()
 
-    allowed_start = pd.Timestamp(f"{YEAR-1}-12-31 00:00:00", tz="UTC")
-    allowed_end = pd.Timestamp(f"{YEAR + 1}-01-01 00:00:00", tz="UTC")
+    year_start = pd.Timestamp(f"{YEAR}-01-01 00:00:00", tz="UTC")
+    year_end = pd.Timestamp(f"{YEAR + 1}-01-01 00:00:00", tz="UTC")
 
     out_of_range = news[
         (news["parsed_seendate"].notna()) &
         (
-            (news["parsed_seendate"] < allowed_start) |
-            (news["parsed_seendate"] >= allowed_end)
+            (news["parsed_seendate"] < year_start) |
+            (news["parsed_seendate"] >= year_end)
         )
     ].copy()
-    print("Rows with seendate outside allowed range:", len(out_of_range))
+    print("Rows with seendate outside requested year:", len(out_of_range))
 
     if "seen_at_utc" in news.columns:
         out_of_range_seen_at = news[
             (news["parsed_seen_at_utc"].notna()) &
             (
-                (news["parsed_seen_at_utc"] < allowed_start) |
-                (news["parsed_seen_at_utc"] >= allowed_end)
+                (news["parsed_seen_at_utc"] < year_start) |
+                (news["parsed_seen_at_utc"] >= year_end)
             )
         ].copy()
-        print("Rows with seen_at_utc outside allowed range:", len(out_of_range_seen_at))
+        print("Rows with seen_at_utc outside requested year:", len(out_of_range_seen_at))
     else:
-        print("Rows with seen_at_utc outside allowed range: COLUMN MISSING")
+        print("Rows with seen_at_utc outside requested year: COLUMN MISSING")
 
     print()
 

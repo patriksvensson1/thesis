@@ -53,14 +53,12 @@ def main():
     removed_bad_seendate = before - len(news)
     print(f"Removed rows with invalid seendate: {removed_bad_seendate}")
 
-    # Rebuild/fix seen_at_utc from seendate whenever it is missing or invalid
     rebuild_mask = news["parsed_seen_at_utc"].isna()
     rebuilt_count = int(rebuild_mask.sum())
     if rebuilt_count > 0:
         news.loc[rebuild_mask, "parsed_seen_at_utc"] = news.loc[rebuild_mask, "parsed_seendate"]
     print(f"Rebuilt seen_at_utc from seendate for rows: {rebuilt_count}")
 
-    # Remove out-of-range rows if reference file exists
     if OUT_OF_RANGE_FILE.exists():
         out_of_range = pd.read_csv(OUT_OF_RANGE_FILE)
 
@@ -88,7 +86,6 @@ def main():
     else:
         print(f"No out-of-range file found: {OUT_OF_RANGE_FILE}")
 
-    # Remove timestamp mismatch rows if reference file exists
     if TIMESTAMP_MISMATCH_FILE.exists():
         mismatch_rows = pd.read_csv(TIMESTAMP_MISMATCH_FILE)
 
@@ -116,20 +113,17 @@ def main():
     else:
         print(f"No timestamp mismatch file found: {TIMESTAMP_MISMATCH_FILE}")
 
-    # Keep only rows inside allowed range:
-    # December 31 previous year through end of target year (exclusive next Jan 1)
-    allowed_start = pd.Timestamp(f"{YEAR-1}-12-31 00:00:00", tz="UTC")
-    allowed_end = pd.Timestamp(f"{YEAR+1}-01-01 00:00:00", tz="UTC")
+    year_start = pd.Timestamp(f"{YEAR}-01-01 00:00:00", tz="UTC")
+    year_end = pd.Timestamp(f"{YEAR+1}-01-01 00:00:00", tz="UTC")
 
     before = len(news)
     news = news[
-        (news["parsed_seendate"] >= allowed_start) &
-        (news["parsed_seendate"] < allowed_end)
+        (news["parsed_seendate"] >= year_start) &
+        (news["parsed_seendate"] < year_end)
     ].copy()
     removed = before - len(news)
-    print(f"Removed rows outside allowed date range after filtering: {removed}")
+    print(f"Removed rows outside requested year after filtering: {removed}")
 
-    # Remove duplicate rows by keeping the earliest occurrence per symbol + url
     before = len(news)
     news = news.sort_values(
         by=["symbol", "url", "parsed_seendate", "title"],
@@ -144,7 +138,6 @@ def main():
     else:
         print(f"No duplicate reference file found: {DUPLICATES_FILE}")
 
-    # Final clean seen_at_utc output
     news["seen_at_utc"] = news["parsed_seen_at_utc"].dt.strftime("%Y-%m-%dT%H:%M:%S%z")
     news["seen_at_utc"] = news["seen_at_utc"].str.replace(r"(\+0000)$", "+00:00", regex=True)
 

@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
 YEAR = 2023
-START_DATE = datetime(YEAR - 1, 12, 31)
+START_DATE = datetime(YEAR, 1, 1)
 END_DATE = datetime(YEAR + 1, 1, 1)
 
 RATE_LIMIT = 6
@@ -116,8 +116,6 @@ def append_progress(symbol: str, date_str: str, status: str, article_count: int)
 
 
 def repair_invalid_json_escapes(text: str) -> str:
-    # Replace backslashes that are NOT followed by a valid JSON escape character
-    # valid escapes: \" \\ \/ \b \f \n \r \t \uXXXX
     return re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
 
 
