@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
 YEAR = 2023
-START_DATE = datetime(YEAR, 1, 1)
+START_DATE = datetime(YEAR - 1, 12, 31)
 END_DATE = datetime(YEAR + 1, 1, 1)
 
 RATE_LIMIT = 6
