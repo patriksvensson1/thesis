@@ -6,7 +6,7 @@ from typing import Any
 import pandas as pd
 
 
-INITIAL_CASH = 50_000.0
+INITIAL_CASH = 50000.0
 
 STOP_LOSS_PCT = 0.003
 TAKE_PROFIT_PCT = 0.005
@@ -42,11 +42,6 @@ class AccountState:
 
 
 def create_account_states(accounts: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """
-    Create one backtest state object per configured account.
-    Returned as dicts so your existing main code can still do:
-        account = account_state["config"]
-    """
     states: list[dict[str, Any]] = []
 
     for account in accounts:
@@ -158,14 +153,16 @@ def close_positions_hit_sl_tp(
     Check the current M5 candle for SL/TP hits.
 
     Assumption:
-    for buys, SL is checked before TP if both are inside the same candle.
-    for sells, SL is checked before TP if both are inside the same candle.
-
-    This is conservative and avoids over-optimism when intrabar path is unknown.
+    - If both SL and TP are inside the same candle, SL is checked first.
+    - A position cannot be closed on its entry bar.
     """
     still_open: list[dict[str, Any]] = []
 
     for pos in account_state["open_positions"]:
+        if pos["entry_time"] == current_time:
+            still_open.append(pos)
+            continue
+
         bar = _get_bar(prices_df, pos["symbol"], current_time)
 
         if bar is None:
@@ -208,10 +205,15 @@ def close_expired_positions_for_account(
     """
     Close positions whose holding time has reached the configured limit.
     Exit price is the current bar open.
+    A position cannot be closed on its entry bar.
     """
     still_open: list[dict[str, Any]] = []
 
     for pos in account_state["open_positions"]:
+        if pos["entry_time"] == current_time:
+            still_open.append(pos)
+            continue
+
         age_minutes = (current_time - pos["entry_time"]).total_seconds() / 60.0
 
         if age_minutes < max_hold_minutes:

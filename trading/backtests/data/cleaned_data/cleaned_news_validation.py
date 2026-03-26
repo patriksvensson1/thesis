@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-YEAR = 2022
+YEAR = 2023
 
 BASE_DIR = Path(__file__).resolve().parent
 CLEANED_FILE = BASE_DIR / f"cleaned_news_{YEAR}.csv"

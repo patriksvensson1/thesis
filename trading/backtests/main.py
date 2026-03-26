@@ -36,14 +36,28 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data/cleaned_data"
 OUTPUT_DIR = BASE_DIR / "data/backtest_output"
 
-PRICES_FILE = DATA_DIR / "cleaned_prices_2022.csv"
-NEWS_FILE = DATA_DIR / "cleaned_news_2022.csv"
+PRICES_FILE = DATA_DIR / "cleaned_prices_2023.csv"
+NEWS_FILE = DATA_DIR / "cleaned_news_2023.csv"
 
 ACTIVE_WINDOW_HOURS = 24
 
 
 def is_m15_boundary(current_time: pd.Timestamp) -> bool:
     return current_time.minute % 15 == 0
+
+
+def persist_results(
+    output_dir: Path,
+    account_states: list[dict[str, Any]],
+    lstm_log_rows: list[dict[str, Any]],
+    ranked_log_rows: list[dict[str, Any]],
+) -> None:
+    save_backtest_results(
+        output_dir=output_dir,
+        account_states=account_states,
+        lstm_log_rows=lstm_log_rows,
+        ranked_log_rows=ranked_log_rows,
+    )
 
 
 def run_m5_step(
@@ -147,6 +161,8 @@ def main() -> None:
     lstm_log_rows: list[dict[str, Any]] = []
     ranked_log_rows: list[dict[str, Any]] = []
 
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
     for current_time in m5_calendar:
         try:
             run_m5_step(
@@ -166,10 +182,28 @@ def main() -> None:
                     ranked_log_rows=ranked_log_rows,
                 )
 
+            persist_results(
+                output_dir=OUTPUT_DIR,
+                account_states=account_states,
+                lstm_log_rows=lstm_log_rows,
+                ranked_log_rows=ranked_log_rows,
+            )
+
         except Exception as e:
             print(f"Cycle crashed at {current_time}: {e}")
 
-    save_backtest_results(
+            # Still try to persist whatever state exists after a failed cycle
+            try:
+                persist_results(
+                    output_dir=OUTPUT_DIR,
+                    account_states=account_states,
+                    lstm_log_rows=lstm_log_rows,
+                    ranked_log_rows=ranked_log_rows,
+                )
+            except Exception as save_error:
+                print(f"Failed to save partial results at {current_time}: {save_error}")
+
+    persist_results(
         output_dir=OUTPUT_DIR,
         account_states=account_states,
         lstm_log_rows=lstm_log_rows,

@@ -12,16 +12,16 @@ BASE_DIR = Path(__file__).resolve().parent
 
 BASE_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
-YEAR = 2023
+YEAR = 2024
 START_DATE = datetime(YEAR, 1, 1)
 END_DATE = datetime(YEAR + 1, 1, 1)
 
 RATE_LIMIT = 6
 RETRY_SLEEP = 6
-MAX_JSON_ERRORS_PER_DAY = 10
+MAX_JSON_ERRORS_PER_DAY = 2
 
 OUTPUT_FILE = BASE_DIR / f"raw_gdelt_news_{YEAR}.csv"
-PROGRESS_FILE = BASE_DIR / f"gdelt_progress_{YEAR}.csv"
+PROGRESS_FILE = BASE_DIR / f"gdelt_progress_{YEAR}.csv" # So we can restart the program at a later time
 
 SEARCH_TERMS = {
     "AAPL.NAS": '("Apple Inc" OR AAPL)',
@@ -138,6 +138,8 @@ def fetch_day_until_handled(
     start_dt: datetime,
     end_dt: datetime,
     symbol: str,
+    split_depth: int = 0,
+    max_split_depth: int = 2,
 ) -> tuple[list[dict], int, str]:
     params = {
         "query": f"{query} AND sourcelang:english",
@@ -179,12 +181,54 @@ def fetch_day_until_handled(
                 )
 
                 if json_error_count >= MAX_JSON_ERRORS_PER_DAY:
+                    if split_depth >= max_split_depth:
+                        print(
+                            f"[FAIL] {symbol} {start_dt.date()} could not be parsed after "
+                            f"{MAX_JSON_ERRORS_PER_DAY} malformed JSON attempts. "
+                            f"Marking as json_failed and continuing."
+                        )
+                        return [], attempt, "json_failed"
+
+                    mid_dt = start_dt + (end_dt - start_dt) / 2
+
                     print(
-                        f"[FAIL] {symbol} {start_dt.date()} could not be parsed after "
-                        f"{MAX_JSON_ERRORS_PER_DAY} malformed JSON attempts. "
-                        f"Marking as json_failed and continuing."
+                        f"[SPLIT] {symbol} {start_dt} -> {end_dt} "
+                        f"due to malformed JSON"
                     )
-                    return [], attempt, "json_failed"
+
+                    left_articles, left_attempts, left_status = fetch_day_until_handled(
+                        session=session,
+                        query=query,
+                        start_dt=start_dt,
+                        end_dt=mid_dt,
+                        symbol=symbol,
+                        split_depth=split_depth + 1,
+                        max_split_depth=max_split_depth,
+                    )
+
+                    time.sleep(RATE_LIMIT)
+
+                    right_articles, right_attempts, right_status = fetch_day_until_handled(
+                        session=session,
+                        query=query,
+                        start_dt=mid_dt,
+                        end_dt=end_dt,
+                        symbol=symbol,
+                        split_depth=split_depth + 1,
+                        max_split_depth=max_split_depth,
+                    )
+
+                    combined_articles = left_articles + right_articles
+                    combined_attempts = attempt + left_attempts + right_attempts
+
+                    if left_status == "json_failed" or right_status == "json_failed":
+                        combined_status = "json_failed"
+                    elif left_status == "json_fixed" or right_status == "json_fixed":
+                        combined_status = "json_fixed"
+                    else:
+                        combined_status = "done"
+
+                    return combined_articles, combined_attempts, combined_status
 
                 time.sleep(RETRY_SLEEP)
                 continue

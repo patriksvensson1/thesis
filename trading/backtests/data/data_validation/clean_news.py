@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-YEAR = 2022
+YEAR = 2023
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR.parent
