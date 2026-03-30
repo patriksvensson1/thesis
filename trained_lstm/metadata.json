@@ -9,9 +9,9 @@
     "volume_change_1",
     "volatility_6"
   ],
-  "train_end_time": "2025-07-24 22:15:00+00:00",
-  "val_end_time": "2025-11-07 18:30:00+00:00",
-  "n_train_sequences": 88995,
-  "n_val_sequences": 18454,
-  "n_test_sequences": 19322
+  "train_end_time": "2025-07-24 21:15:00+00:00",
+  "val_end_time": "2025-11-07 18:00:00+00:00",
+  "n_train_sequences": 89106,
+  "n_val_sequences": 18465,
+  "n_test_sequences": 19340
 }
