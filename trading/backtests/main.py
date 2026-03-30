@@ -31,13 +31,18 @@ from backtest_logs import (
     save_backtest_results,
 )
 
+YEAR = 2023
+
 UTC = timezone.utc
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data/cleaned_data"
-OUTPUT_DIR = BASE_DIR / "data/backtest_output"
+OUTPUT_DIR = BASE_DIR / f"data/backtest_output_{YEAR}"
 
-PRICES_FILE = DATA_DIR / "cleaned_prices_2023.csv"
-NEWS_FILE = DATA_DIR / "cleaned_news_2023.csv"
+PRICES_FILE = DATA_DIR / f"cleaned_prices_{YEAR}.csv"
+NEWS_FILES = [
+    DATA_DIR / f"cleaned_news_{YEAR}_1.csv",
+    DATA_DIR / f"cleaned_news_{YEAR}_2.csv",
+]
 
 ACTIVE_WINDOW_HOURS = 24
 
@@ -58,6 +63,33 @@ def persist_results(
         lstm_log_rows=lstm_log_rows,
         ranked_log_rows=ranked_log_rows,
     )
+
+
+def load_all_historical_news(news_files: list[Path], symbols: list[str]) -> pd.DataFrame:
+    news_parts: list[pd.DataFrame] = []
+
+    for news_file in news_files:
+        if not news_file.exists():
+            print(f"News file not found: {news_file}")
+            continue
+
+        part = load_historical_news(news_file, symbols=symbols)
+        print(f"Loaded news file: {news_file} | rows={len(part)}")
+        news_parts.append(part)
+
+    if not news_parts:
+        raise FileNotFoundError("No cleaned news files were found.")
+
+    news_df = pd.concat(news_parts, ignore_index=True)
+
+    if "seen_at_utc" in news_df.columns:
+        news_df = news_df.sort_values(
+            by=["symbol", "seen_at_utc", "url"],
+            na_position="last"
+        ).reset_index(drop=True)
+
+    print(f"Total combined news rows: {len(news_df)}")
+    return news_df
 
 
 def run_m5_step(
@@ -153,7 +185,7 @@ def run_one_cycle(
 def main() -> None:
     prices_m5_df = load_historical_prices(PRICES_FILE, symbols=SYMBOLS)
     prices_m15_df = build_m15_from_m5(prices_m5_df)
-    news_df = load_historical_news(NEWS_FILE, symbols=SYMBOLS)
+    news_df = load_all_historical_news(NEWS_FILES, symbols=SYMBOLS)
 
     m5_calendar = build_backtest_calendar(prices_m5_df)
     account_states = create_account_states(ACCOUNTS)
@@ -192,7 +224,6 @@ def main() -> None:
         except Exception as e:
             print(f"Cycle crashed at {current_time}: {e}")
 
-            # Still try to persist whatever state exists after a failed cycle
             try:
                 persist_results(
                     output_dir=OUTPUT_DIR,

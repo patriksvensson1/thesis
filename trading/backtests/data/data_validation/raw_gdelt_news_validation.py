@@ -7,16 +7,22 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR.parent
 RAW_DIR = DATA_DIR / "raw_data"
 
-NEWS_FILE = RAW_DIR / f"raw_gdelt_news_{YEAR}.csv"
-DUPLICATES_FILE = BASE_DIR / f"raw_news_{YEAR}_duplicates.csv"
-OUT_OF_RANGE_FILE = BASE_DIR / f"raw_news_{YEAR}_out_of_range.csv"
-TIMESTAMP_MISMATCH_FILE = BASE_DIR / f"raw_news_{YEAR}_timestamp_mismatches.csv"
+INPUT_FILES = [
+    RAW_DIR / f"raw_gdelt_news_{YEAR}_1.csv",
+    RAW_DIR / f"raw_gdelt_news_{YEAR}_2.csv",
+]
 
 
-def main():
-    news = pd.read_csv(NEWS_FILE)
+def process_file(news_file: Path):
+    suffix = news_file.stem.split("_")[-1]
 
-    print("=== NEWS FILE CHECKS ===")
+    duplicates_file = BASE_DIR / f"raw_news_{YEAR}_{suffix}_duplicates.csv"
+    out_of_range_file = BASE_DIR / f"raw_news_{YEAR}_{suffix}_out_of_range.csv"
+    timestamp_mismatch_file = BASE_DIR / f"raw_news_{YEAR}_{suffix}_timestamp_mismatches.csv"
+
+    news = pd.read_csv(news_file)
+
+    print(f"=== NEWS FILE CHECKS: {news_file.name} ===")
     print("Rows:", len(news))
     print("Symbols:", news["symbol"].nunique())
     print()
@@ -115,24 +121,34 @@ def main():
             by=["symbol", "url", "parsed_seendate", "title"],
             na_position="last"
         )
-        duplicate_rows.to_csv(DUPLICATES_FILE, index=False)
-        print(f"Saved duplicates to {DUPLICATES_FILE}")
+        duplicate_rows.to_csv(duplicates_file, index=False)
+        print(f"Saved duplicates to {duplicates_file}")
 
     if not out_of_range.empty:
         out_of_range = out_of_range.sort_values(
             by=["symbol", "parsed_seendate", "url"],
             na_position="last"
         )
-        out_of_range.to_csv(OUT_OF_RANGE_FILE, index=False)
-        print(f"Saved out-of-range rows to {OUT_OF_RANGE_FILE}")
+        out_of_range.to_csv(out_of_range_file, index=False)
+        print(f"Saved out-of-range rows to {out_of_range_file}")
 
     if not timestamp_mismatches.empty:
         timestamp_mismatches = timestamp_mismatches.sort_values(
             by=["symbol", "parsed_seendate", "url"],
             na_position="last"
         )
-        timestamp_mismatches.to_csv(TIMESTAMP_MISMATCH_FILE, index=False)
-        print(f"Saved timestamp mismatches to {TIMESTAMP_MISMATCH_FILE}")
+        timestamp_mismatches.to_csv(timestamp_mismatch_file, index=False)
+        print(f"Saved timestamp mismatches to {timestamp_mismatch_file}")
+
+    print()
+
+
+def main():
+    for news_file in INPUT_FILES:
+        if news_file.exists():
+            process_file(news_file)
+        else:
+            print(f"File not found: {news_file}")
 
 
 if __name__ == "__main__":

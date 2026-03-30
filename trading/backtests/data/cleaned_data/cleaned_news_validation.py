@@ -1,19 +1,26 @@
 from pathlib import Path
 import pandas as pd
 
-YEAR = 2023
+YEAR = 2024
 
 BASE_DIR = Path(__file__).resolve().parent
-CLEANED_FILE = BASE_DIR / f"cleaned_news_{YEAR}.csv"
-DUPLICATES_OUT = BASE_DIR / f"cleaned_news_{YEAR}_remaining_duplicates.csv"
-OUT_OF_RANGE_OUT = BASE_DIR / f"cleaned_news_{YEAR}_remaining_out_of_range.csv"
-TIMESTAMP_MISMATCH_OUT = BASE_DIR / f"cleaned_news_{YEAR}_remaining_timestamp_mismatches.csv"
+
+INPUT_FILES = [
+    BASE_DIR / f"cleaned_news_{YEAR}_1.csv",
+    BASE_DIR / f"cleaned_news_{YEAR}_2.csv",
+]
 
 
-def main():
-    news = pd.read_csv(CLEANED_FILE)
+def process_file(cleaned_file: Path):
+    suffix = cleaned_file.stem.split("_")[-1]
 
-    print("=== CLEANED NEWS FILE CHECKS ===")
+    duplicates_out = BASE_DIR / f"cleaned_news_{YEAR}_{suffix}_remaining_duplicates.csv"
+    out_of_range_out = BASE_DIR / f"cleaned_news_{YEAR}_{suffix}_remaining_out_of_range.csv"
+    timestamp_mismatch_out = BASE_DIR / f"cleaned_news_{YEAR}_{suffix}_remaining_timestamp_mismatches.csv"
+
+    news = pd.read_csv(cleaned_file)
+
+    print(f"=== CLEANED NEWS FILE CHECKS: {cleaned_file.name} ===")
     print("Rows:", len(news))
     print("Symbols:", news["symbol"].nunique())
     print()
@@ -129,24 +136,34 @@ def main():
                 by=["symbol", "url", "parsed_seendate", "title"],
                 na_position="last"
             )
-            duplicate_rows.to_csv(DUPLICATES_OUT, index=False)
-            print(f"Saved remaining duplicates to {DUPLICATES_OUT}")
+            duplicate_rows.to_csv(duplicates_out, index=False)
+            print(f"Saved remaining duplicates to {duplicates_out}")
 
         if len(out_of_range) > 0:
             out_of_range = out_of_range.sort_values(
                 by=["symbol", "parsed_seendate", "url"],
                 na_position="last"
             )
-            out_of_range.to_csv(OUT_OF_RANGE_OUT, index=False)
-            print(f"Saved remaining out-of-range rows to {OUT_OF_RANGE_OUT}")
+            out_of_range.to_csv(out_of_range_out, index=False)
+            print(f"Saved remaining out-of-range rows to {out_of_range_out}")
 
         if len(timestamp_mismatches) > 0:
             timestamp_mismatches = timestamp_mismatches.sort_values(
                 by=["symbol", "parsed_seendate", "url"],
                 na_position="last"
             )
-            timestamp_mismatches.to_csv(TIMESTAMP_MISMATCH_OUT, index=False)
-            print(f"Saved remaining timestamp mismatches to {TIMESTAMP_MISMATCH_OUT}")
+            timestamp_mismatches.to_csv(timestamp_mismatch_out, index=False)
+            print(f"Saved remaining timestamp mismatches to {timestamp_mismatch_out}")
+
+    print()
+
+
+def main():
+    for cleaned_file in INPUT_FILES:
+        if cleaned_file.exists():
+            process_file(cleaned_file)
+        else:
+            print(f"File not found: {cleaned_file}")
 
 
 if __name__ == "__main__":
