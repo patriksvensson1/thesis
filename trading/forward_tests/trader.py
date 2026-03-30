@@ -1,25 +1,47 @@
+import time
 import MetaTrader5 as mt5
 
-STOP_LOSS_PCT = 0.003   # 0.3%
-TAKE_PROFIT_PCT = 0.005 # 0.5%
-
-# 2h holding time and 15-minute cycle -> at most 8 overlapping trades
+STOP_LOSS_PCT = 0.003
+TAKE_PROFIT_PCT = 0.005
 MAX_OPEN_TRADES = 8
-
-# Total account risk cap = 1%
 MAX_TOTAL_RISK_PCT = 0.01
-
 DEVIATION = 20
 STRATEGY_ID = 20260319
 
 
-def _get_current_price(symbol: str, action: str) -> float | None:
-    """
-    Get the current market price for a symbol.
+def _build_retcode_name_map() -> dict[int, str]:
+    mapping = {}
+    for attr_name in dir(mt5):
+        if attr_name.startswith("TRADE_RETCODE_"):
+            value = getattr(mt5, attr_name)
+            if isinstance(value, int):
+                mapping[value] = attr_name
+    return mapping
 
-    Buy  -> ask
-    Sell -> bid
-    """
+
+RETCODE_NAMES = _build_retcode_name_map()
+
+
+def _format_retcode(result) -> str:
+    if result is None:
+        return "None"
+
+    retcode = getattr(result, "retcode", None)
+    retcode_name = RETCODE_NAMES.get(retcode, "UNKNOWN_RETCODE")
+    comment = getattr(result, "comment", "")
+
+    if comment:
+        return f"{retcode} ({retcode_name}) | comment={comment}"
+    return f"{retcode} ({retcode_name})"
+
+
+def get_account_key(account: dict) -> str:
+    if "login" in account:
+        return str(account["login"])
+    return str(account["name"])
+
+
+def _get_current_price(symbol: str, action: str) -> float | None:
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
         return None
@@ -33,9 +55,6 @@ def _get_current_price(symbol: str, action: str) -> float | None:
 
 
 def _calculate_sl_tp(entry_price: float, action: str) -> tuple[float, float]:
-    """
-    Calculate stop loss and take profit from entry price.
-    """
     if action == "buy":
         stop_loss = entry_price * (1 - STOP_LOSS_PCT)
         take_profit = entry_price * (1 + TAKE_PROFIT_PCT)
@@ -49,9 +68,6 @@ def _calculate_sl_tp(entry_price: float, action: str) -> tuple[float, float]:
 
 
 def _count_open_positions() -> int:
-    """
-    Count currently open positions in the currently logged-in MT5 account.
-    """
     positions = mt5.positions_get()
     if positions is None:
         return 0
@@ -59,10 +75,6 @@ def _count_open_positions() -> int:
 
 
 def _calculate_risk_per_trade_money() -> float | None:
-    """
-    Total max risk is 1% of account balance.
-    If max open trades is 8, each trade may risk at most 1% / 8.
-    """
     account_info = mt5.account_info()
     if account_info is None:
         return None
@@ -76,22 +88,6 @@ def _calculate_volume_from_risk(
     entry_price: float,
     stop_loss: float,
 ) -> float | None:
-    """
-    Compute order volume so that the worst-case loss at stop loss is equal to
-    the allowed risk per trade.
-
-    This uses MT5 symbol metadata:
-    - trade_contract_size
-    - volume_min
-    - volume_max
-    - volume_step
-
-    For many CFDs/stocks, a rough loss estimate is:
-        loss_per_1_lot = |entry - stop_loss| * contract_size
-
-    Then:
-        volume = allowed_risk_money / loss_per_1_lot
-    """
     allowed_risk_money = _calculate_risk_per_trade_money()
     if allowed_risk_money is None:
         return None
@@ -130,10 +126,6 @@ def _calculate_volume_from_risk(
 
 
 def _build_order_request(symbol: str, action: str) -> dict | None:
-    """
-    Build the MT5 order request dictionary for a buy or sell order.
-    Volume is computed dynamically from the account risk rule.
-    """
     entry_price = _get_current_price(symbol, action)
     if entry_price is None:
         return None
@@ -151,7 +143,7 @@ def _build_order_request(symbol: str, action: str) -> dict | None:
     else:
         return None
 
-    request = {
+    return {
         "action": mt5.TRADE_ACTION_DEAL,
         "symbol": symbol,
         "volume": volume,
@@ -166,21 +158,51 @@ def _build_order_request(symbol: str, action: str) -> dict | None:
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
 
-    return request
+
+def _get_open_ticket_set() -> set[str]:
+    positions = mt5.positions_get()
+    if positions is None:
+        return set()
+    return {str(pos.ticket) for pos in positions}
 
 
-def execute_best_trade(account: dict, ranked_opportunities: list[dict]) -> None:
-    """
-    Execute at most one trade per cycle for the currently logged-in account.
+def _record_new_trade_open_time(
+    account: dict,
+    trade_state: dict[str, dict[str, float]],
+    tickets_before: set[str],
+) -> None:
+    account_key = get_account_key(account)
+    account_trade_times = trade_state.setdefault(account_key, {})
 
-    This matches the thesis logic:
-    - one new trade per 15-minute cycle
-    - 2-hour max holding time
-    - therefore max overlapping trades is naturally 8
-    - risk per trade = 1% / 8 of account balance
+    positions_after = mt5.positions_get()
+    if positions_after is None:
+        print(f"Could not fetch open positions after trade for {account['name']}")
+        return
 
-    Multiple positions in the same symbol are allowed.
-    """
+    tickets_after = {str(pos.ticket) for pos in positions_after}
+    new_tickets = tickets_after - tickets_before
+
+    if len(new_tickets) != 1:
+        print(
+            f"Could not uniquely identify new trade for {account['name']} | "
+            f"new_tickets={sorted(new_tickets)}"
+        )
+        return
+
+    new_ticket = next(iter(new_tickets))
+    account_trade_times[new_ticket] = time.time()
+
+    print(
+        f"Recorded trade open time | "
+        f"account={account['name']} | ticket={new_ticket}"
+    )
+
+
+def execute_best_trade(
+    account: dict,
+    ranked_opportunities: list[dict],
+    trade_state: dict[str, dict[str, float]],
+) -> None:
     if not ranked_opportunities:
         print(f"No opportunities for {account['name']}")
         return
@@ -201,15 +223,13 @@ def execute_best_trade(account: dict, ranked_opportunities: list[dict]) -> None:
         print(f"No trade executed for {account['name']} (best action was hold)")
         return
 
-    request = _build_order_request(
-        symbol=symbol,
-        action=action,
-    )
+    request = _build_order_request(symbol=symbol, action=action)
 
     if request is None:
         print(f"Could not build order request for {symbol}")
         return
 
+    tickets_before = _get_open_ticket_set()
     result = mt5.order_send(request)
 
     if result is None:
@@ -219,9 +239,15 @@ def execute_best_trade(account: dict, ranked_opportunities: list[dict]) -> None:
     if result.retcode != mt5.TRADE_RETCODE_DONE:
         print(
             f"Trade failed for {account['name']} | "
-            f"symbol={symbol} | action={action} | retcode={result.retcode}"
+            f"symbol={symbol} | action={action} | {_format_retcode(result)}"
         )
         return
+
+    _record_new_trade_open_time(
+        account=account,
+        trade_state=trade_state,
+        tickets_before=tickets_before,
+    )
 
     print(
         f"Trade executed for {account['name']} | "

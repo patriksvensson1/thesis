@@ -36,6 +36,14 @@ BASE_DIR = Path(__file__).resolve().parent
 STATE_FILE = BASE_DIR / "temporary_backup.json"
 TEMP_STATE_FILE = BASE_DIR / "temporary_backup.tmp.json"
 
+# Tiny persistent store for trade open timestamps
+TRADE_STATE_FILE = BASE_DIR / "open_trade_times.json"
+TEMP_TRADE_STATE_FILE = BASE_DIR / "open_trade_times.tmp.json"
+
+
+def utc_now_str() -> str:
+    return datetime.now(UTC_TZ).strftime("%Y-%m-%d %H:%M:%S UTC")
+
 
 def rebuild_seen_urls(article_store: dict[str, list[dict]]) -> dict[str, set[str]]:
     seen_urls_by_symbol = {symbol: set() for symbol in SYMBOLS}
@@ -106,7 +114,7 @@ def load_state() -> tuple[dict[str, set[str]], dict[str, list[dict]]]:
     default_seen_urls = {symbol: set() for symbol in SYMBOLS}
 
     if not STATE_FILE.exists():
-        print("No backup file found. Starting fresh.")
+        print(f"[{utc_now_str()}] No backup file found. Starting fresh.")
         return default_seen_urls, default_article_store
 
     try:
@@ -125,14 +133,64 @@ def load_state() -> tuple[dict[str, set[str]], dict[str, list[dict]]]:
         seen_urls = rebuild_seen_urls(article_store)
 
         print(
-            f"Loaded backup from {STATE_FILE} | "
+            f"[{utc_now_str()}] Loaded backup from {STATE_FILE} | "
             f"stored_articles={sum(len(v) for v in article_store.values())}"
         )
         return seen_urls, article_store
 
     except Exception as e:
-        print(f"Failed to load backup file. Starting fresh. Error: {e}")
+        print(f"[{utc_now_str()}] Failed to load backup file. Starting fresh. Error: {e}")
         return default_seen_urls, default_article_store
+
+
+def get_account_key(account: dict) -> str:
+    if "login" in account:
+        return str(account["login"])
+    return str(account["name"])
+
+
+def load_trade_state() -> dict[str, dict[str, float]]:
+    if not TRADE_STATE_FILE.exists():
+        print(f"[{utc_now_str()}] No trade timer file found. Starting fresh.")
+        return {}
+
+    try:
+        with open(TRADE_STATE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not isinstance(data, dict):
+            return {}
+
+        normalized: dict[str, dict[str, float]] = {}
+
+        for account_key, ticket_map in data.items():
+            if not isinstance(ticket_map, dict):
+                continue
+
+            normalized[account_key] = {}
+            for ticket, opened_at_epoch in ticket_map.items():
+                try:
+                    normalized[account_key][str(ticket)] = float(opened_at_epoch)
+                except (TypeError, ValueError):
+                    continue
+
+        total_trades = sum(len(v) for v in normalized.values())
+        print(
+            f"[{utc_now_str()}] Loaded trade timer file from {TRADE_STATE_FILE} | "
+            f"tracked_open_trades={total_trades}"
+        )
+        return normalized
+
+    except Exception as e:
+        print(f"[{utc_now_str()}] Failed to load trade timer file. Starting fresh. Error: {e}")
+        return {}
+
+
+def save_trade_state(trade_state: dict[str, dict[str, float]]) -> None:
+    with open(TEMP_TRADE_STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(trade_state, f, ensure_ascii=False, indent=2)
+
+    os.replace(TEMP_TRADE_STATE_FILE, TRADE_STATE_FILE)
 
 
 def get_market_open_close(now_et: datetime) -> tuple[datetime, datetime]:
@@ -156,7 +214,7 @@ def get_market_open_close(now_et: datetime) -> tuple[datetime, datetime]:
 
 def get_next_run_time(interval_minutes: int) -> datetime:
     """
-    Schedule the next run on fixed 15-minute boundaries inside the market window.
+    Schedule the next run on fixed boundaries inside the market window.
 
     Examples for interval=15:
         09:30, 09:45, 10:00, 10:15, ...
@@ -198,80 +256,94 @@ def get_next_run_time(interval_minutes: int) -> datetime:
 def sleep_until_next_run(interval_minutes: int) -> None:
     """
     Sleep until the next scheduled run time.
-    Prints the next run in local PC time.
+    Prints the next run in UTC.
     """
     next_run = get_next_run_time(interval_minutes)
     now_et = datetime.now(EASTERN_TZ)
     sleep_seconds = (next_run - now_et).total_seconds()
 
     if sleep_seconds > 0:
-        next_run_local = next_run.astimezone()  # PC local timezone
+        next_run_utc = next_run.astimezone(UTC_TZ)
         print(
-            f"Sleeping until next cycle at "
-            f"{next_run_local.strftime('%Y-%m-%d %H:%M:%S')}"
+            f"[{utc_now_str()}] Sleeping until next cycle at "
+            f"{next_run_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}"
         )
         time.sleep(sleep_seconds)
 
 
-def close_expired_positions_for_account():
+def close_expired_positions_for_account(
+    account: dict,
+    trade_state: dict[str, dict[str, float]],
+) -> None:
     open_positions = get_open_positions()
 
-    if not open_positions:
-        print("No open positions found.")
-        return
-
+    account_key = get_account_key(account)
+    account_trade_times = trade_state.setdefault(account_key, {})
     max_age_seconds = MAX_HOLD_MINUTES * 60
-
-    # Estimate MT5/server clock offset using currently open positions.
-    # If pos.time is consistently ahead of local epoch time, compensate for it.
     now_ts = time.time()
 
-    # Only use reasonable positive offsets, not stale/broken values
-    candidate_offsets = []
-    for pos in open_positions:
-        diff = pos.time - now_ts
-        if 0 <= diff <= 6 * 3600:
-            candidate_offsets.append(diff)
+    if not open_positions:
+        if account_trade_times:
+            print(
+                f"[{utc_now_str()}] No open positions found for {account['name']}. "
+                f"Clearing {len(account_trade_times)} stale tracked trades."
+            )
+            trade_state[account_key] = {}
+        else:
+            print(f"[{utc_now_str()}] No open positions found for {account['name']}.")
+        return
 
-    server_offset_seconds = max(candidate_offsets) if candidate_offsets else 0
-    now_server_ts = now_ts + server_offset_seconds
+    open_tickets = {str(pos.ticket) for pos in open_positions}
 
-    print(
-        f"Close check baseline | now_ts={now_ts} | "
-        f"server_offset_seconds={server_offset_seconds:.2f} | "
-        f"now_server_ts={now_server_ts}"
-    )
+    stale_tickets = [ticket for ticket in account_trade_times if ticket not in open_tickets]
+    for ticket in stale_tickets:
+        del account_trade_times[ticket]
 
     for pos in open_positions:
         try:
-            age_seconds = now_server_ts - pos.time
+            ticket = str(pos.ticket)
+            opened_at_epoch = account_trade_times.get(ticket)
 
-            opened_at_local = datetime.fromtimestamp(pos.time)
-            now_server_local = datetime.fromtimestamp(now_server_ts)
+            if opened_at_epoch is None:
+                print(
+                    f"[{utc_now_str()}] Skipping untracked position | "
+                    f"account={account['name']} | symbol={pos.symbol} | ticket={pos.ticket}"
+                )
+                continue
+
+            age_seconds = now_ts - opened_at_epoch
 
             if age_seconds >= max_age_seconds:
                 print(
-                    f"Closing expired position | "
-                    f"symbol={pos.symbol}, ticket={pos.ticket}, age_seconds={age_seconds:.2f}"
+                    f"[{utc_now_str()}] Closing expired position | "
+                    f"account={account['name']} | "
+                    f"symbol={pos.symbol} | "
+                    f"ticket={pos.ticket} | "
+                    f"age_seconds={age_seconds:.2f}"
                 )
                 ok = close_position(pos)
-                print(f"Close result for ticket {pos.ticket}: {ok}")
+                print(f"[{utc_now_str()}] Close result for ticket {pos.ticket}: {ok}")
+
+                if ok:
+                    account_trade_times.pop(ticket, None)
 
         except Exception as e:
             print(
-                f"Failed to process/close position "
+                f"[{utc_now_str()}] Failed to process/close position "
                 f"{getattr(pos, 'ticket', 'unknown')}: {e}"
             )
+
 
 def run_one_cycle(
     seen_urls: dict[str, set[str]],
     article_store: dict[str, list[dict]],
     logged_sentiment_urls: set[str],
+    trade_state: dict[str, dict[str, float]],
 ) -> None:
     """
     Run one full strategy cycle.
     """
-    print(f"\nRunning cycle at {datetime.now()}")
+    print(f"\n[{utc_now_str()}] Running cycle")
 
     # Log into one account first so MT5 market data is available
     login_to_account(ACCOUNTS[0])
@@ -295,7 +367,7 @@ def run_one_cycle(
         logged_urls=logged_sentiment_urls,
         logged_at_utc=datetime.now(UTC_TZ).isoformat(),
     )
-    print(f"Sentiment log appended rows: {appended_count}")
+    print(f"[{utc_now_str()}] Sentiment log appended rows: {appended_count}")
 
     lstm_predictions = get_lstm_predictions(SYMBOLS)
 
@@ -303,19 +375,19 @@ def run_one_cycle(
         lstm_predictions=lstm_predictions,
         cycle_time_utc=datetime.now(UTC_TZ).isoformat(),
     )
-    print(f"LSTM predictions log appended rows: {prediction_rows}")
+    print(f"[{utc_now_str()}] LSTM predictions log appended rows: {prediction_rows}")
 
     # --------------------------------------------------
     # 2. Run account-specific strategy logic
     # --------------------------------------------------
     for account in ACCOUNTS:
         try:
-            print(f"Starting account: {account['name']}")
+            print(f"[{utc_now_str()}] Starting account: {account['name']}")
 
             login_to_account(account)
-            print(f"Logged into: {account['name']}")
+            print(f"[{utc_now_str()}] Logged into: {account['name']}")
 
-            close_expired_positions_for_account()
+            close_expired_positions_for_account(account, trade_state)
 
             ranked_opportunities = apply_account_decay_and_rank(
                 symbols=SYMBOLS,
@@ -329,16 +401,17 @@ def run_one_cycle(
                 ranked_opportunities=ranked_opportunities,
                 cycle_time_utc=datetime.now(UTC_TZ).isoformat(),
             )
-            print(f"Ranked opportunities log appended rows: {ranked_rows}")
+            print(f"[{utc_now_str()}] Ranked opportunities log appended rows: {ranked_rows}")
 
-            execute_best_trade(account, ranked_opportunities)
+            execute_best_trade(account, ranked_opportunities, trade_state)
 
-            print(account["name"], ranked_opportunities[:3])
+            print(f"[{utc_now_str()}] {account['name']} {ranked_opportunities[:3]}")
 
         except Exception as e:
-            print(f"Account failed: {account['name']} | Error: {e}")
+            print(f"[{utc_now_str()}] Account failed: {account['name']} | Error: {e}")
 
     save_state(article_store)
+    save_trade_state(trade_state)
 
 
 def main():
@@ -346,19 +419,26 @@ def main():
 
     seen_urls, article_store = load_state()
     logged_sentiment_urls = load_logged_sentiment_urls()
+    trade_state = load_trade_state()
 
     while True:
         try:
             sleep_until_next_run(CHECK_EVERY_MINUTES)
-            run_one_cycle(seen_urls, article_store, logged_sentiment_urls)
+            run_one_cycle(
+                seen_urls=seen_urls,
+                article_store=article_store,
+                logged_sentiment_urls=logged_sentiment_urls,
+                trade_state=trade_state,
+            )
         except Exception as e:
-            print(f"Cycle crashed: {e}")
+            print(f"[{utc_now_str()}] Cycle crashed: {e}")
 
             try:
                 save_state(article_store)
-                print("Saved crash backup.")
+                save_trade_state(trade_state)
+                print(f"[{utc_now_str()}] Saved crash backup.")
             except Exception as save_error:
-                print(f"Failed to save crash backup: {save_error}")
+                print(f"[{utc_now_str()}] Failed to save crash backup: {save_error}")
 
             time.sleep(5)
 
