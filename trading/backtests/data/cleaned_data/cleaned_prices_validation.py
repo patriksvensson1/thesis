@@ -29,7 +29,6 @@ def main():
     # Check that timestamps are in strictly increasing order within each symbol
     bad_order_symbols = []
     for symbol, g in df.groupby("symbol"):
-        g = g.sort_values("time")
         if not g["time"].is_monotonic_increasing:
             bad_order_symbols.append(symbol)
 
@@ -37,6 +36,14 @@ def main():
     if bad_order_symbols:
         print("Bad order symbols:", bad_order_symbols)
     print()
+
+    # Check for missing values in core fields
+    core_cols = [
+        "symbol", "time", "open", "high", "low", "close",
+        "tick_volume", "spread", "real_volume"
+    ]
+    missing_rows = df[core_cols].isna().any(axis=1).sum()
+    print("Rows with missing core fields:", missing_rows)
 
     # Check OHLC integrity: high should be the max and low should be the min of the bar
     bad_ohlc = df[
@@ -56,6 +63,14 @@ def main():
         (df["real_volume"] < 0)
     ]
     print("Rows with negative volume/spread fields:", len(bad_nonnegative))
+
+    # Check that timestamps lie exactly on a 5-minute grid
+    bad_grid = df[
+        (df["time"].dt.second != 0) |
+        (df["time"].dt.microsecond != 0) |
+        (df["time"].dt.minute % 5 != 0)
+    ]
+    print("Rows off the 5-minute grid:", len(bad_grid))
     print()
 
     # Create a trading-date column so we can validate daily session structure
@@ -75,21 +90,64 @@ def main():
     daily["first_bar_str"] = daily["first_bar"].dt.strftime("%H:%M:%S")
     daily["last_bar_str"] = daily["last_bar"].dt.strftime("%H:%M:%S")
 
-    # Check for dates where symbols disagree on bar count or session window
+    expected_symbols = set(df["symbol"].unique())
     inconsistent_dates = []
-    for date, group in daily.groupby("date"):
-        same_bars = group["bars"].nunique() == 1
-        same_first = group["first_bar_str"].nunique() == 1
-        same_last = group["last_bar_str"].nunique() == 1
 
-        if not (same_bars and same_first and same_last):
-            inconsistent_dates.append(group)
+    # Strict cross-symbol timestamp alignment check
+    for date, group in df.groupby("date"):
+        group = group.sort_values(["symbol", "time"]).copy()
+
+        present_symbols = set(group["symbol"].unique())
+        missing_symbols = sorted(expected_symbols - present_symbols)
+
+        symbol_times = {}
+        for symbol, sg in group.groupby("symbol"):
+            timestamps = tuple(
+                sg.sort_values("time")["time"].dt.strftime("%H:%M:%S").tolist()
+            )
+            symbol_times[symbol] = timestamps
+
+        date_is_inconsistent = False
+        mismatching_symbols = []
+
+        # Missing symbol(s) for the date
+        if missing_symbols:
+            date_is_inconsistent = True
+
+        # Full timestamp sequence alignment
+        if symbol_times:
+            reference_symbol = sorted(symbol_times.keys())[0]
+            reference_times = symbol_times[reference_symbol]
+
+            mismatching_symbols = [
+                symbol for symbol, times in symbol_times.items()
+                if times != reference_times
+            ]
+
+            if mismatching_symbols:
+                date_is_inconsistent = True
+
+        if date_is_inconsistent:
+            inconsistent_daily = daily[daily["date"] == date].copy()
+            inconsistent_daily["timestamp_mismatch"] = False
+
+            if mismatching_symbols:
+                inconsistent_daily.loc[
+                    inconsistent_daily["symbol"].isin(mismatching_symbols),
+                    "timestamp_mismatch"
+                ] = True
+
+            inconsistent_daily["missing_symbols_count"] = len(missing_symbols)
+            inconsistent_daily["missing_symbols"] = ", ".join(missing_symbols)
+
+            inconsistent_dates.append(inconsistent_daily)
 
     if inconsistent_dates:
         result = pd.concat(inconsistent_dates, ignore_index=True)
         result.to_csv(INCONSISTENCY_FILE, index=False)
         print(f"Saved inconsistent dates to {INCONSISTENCY_FILE}")
         print("Number of inconsistent dates:", result["date"].nunique())
+        print("Number of symbol-date rows written:", len(result))
     else:
         print("No cross-symbol daily inconsistencies found.")
     print()
