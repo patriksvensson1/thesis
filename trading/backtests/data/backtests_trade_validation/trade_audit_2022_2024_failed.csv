@@ -1,0 +1,1 @@
+source_year,account_name,symbol,side,entry_time,exit_time,exit_reason,entry_price,exit_price,stop_loss,take_profit,volume,pnl,expected_pnl,entry_bar_exists,exit_bar_exists,exit_after_entry,stop_loss_formula_ok,take_profit_formula_ok,pnl_formula_ok,entry_price_matches_bar_open,exit_price_matches_reason,exit_bar_hit_level,all_checks_passed,details
