@@ -259,6 +259,7 @@ def audit_summary(trades: pd.DataFrame, summaries: pd.DataFrame) -> pd.DataFrame
             recomputed_closed_trades=("pnl", "size"),
             recomputed_wins=("pnl", lambda s: int((s > 0).sum())),
             recomputed_losses=("pnl", lambda s: int((s < 0).sum())),
+            recomputed_zero_pnl_trades=("pnl", lambda s: int(np.isclose(s, 0.0, atol=PNL_ATOL, rtol=0.0).sum())),
             recomputed_total_pnl=("pnl", "sum"),
         )
     )
@@ -272,6 +273,7 @@ def audit_summary(trades: pd.DataFrame, summaries: pd.DataFrame) -> pd.DataFrame
     merged["recomputed_closed_trades"] = merged["recomputed_closed_trades"].fillna(0).astype(int)
     merged["recomputed_wins"] = merged["recomputed_wins"].fillna(0).astype(int)
     merged["recomputed_losses"] = merged["recomputed_losses"].fillna(0).astype(int)
+    merged["recomputed_zero_pnl_trades"] = merged["recomputed_zero_pnl_trades"].fillna(0).astype(int)
     merged["recomputed_total_pnl"] = merged["recomputed_total_pnl"].fillna(0.0)
 
     merged["closed_trades_match"] = (
@@ -282,6 +284,14 @@ def audit_summary(trades: pd.DataFrame, summaries: pd.DataFrame) -> pd.DataFrame
     )
     merged["losses_match"] = (
         merged["losses"].astype(int) == merged["recomputed_losses"]
+    )
+    merged["zero_pnl_count_match"] = (
+        merged["closed_trades"].astype(int) ==
+        (
+            merged["recomputed_wins"] +
+            merged["recomputed_losses"] +
+            merged["recomputed_zero_pnl_trades"]
+        )
     )
     merged["total_pnl_match"] = np.isclose(
         merged["total_pnl"].astype(float),
@@ -294,6 +304,7 @@ def audit_summary(trades: pd.DataFrame, summaries: pd.DataFrame) -> pd.DataFrame
         merged["closed_trades_match"] &
         merged["wins_match"] &
         merged["losses_match"] &
+        merged["zero_pnl_count_match"] &
         merged["total_pnl_match"]
     )
 
@@ -364,7 +375,13 @@ def main() -> None:
     print(f"Failed any summary check: {len(summary_failed_df)}")
     print()
 
-    for col in ["closed_trades_match", "wins_match", "losses_match", "total_pnl_match"]:
+    for col in [
+        "closed_trades_match",
+        "wins_match",
+        "losses_match",
+        "zero_pnl_count_match",
+        "total_pnl_match",
+    ]:
         passed = int(summary_audit_df[col].sum())
         failed = len(summary_audit_df) - passed
         print(f"{col}: passed={passed}, failed={failed}")
