@@ -16,7 +16,6 @@ from news import fetch_gdelt_news
 from sentiment import compute_sentiment_scores
 from sentiment_log import load_logged_sentiment_urls, append_sentiment_log
 from lstm_model import get_lstm_predictions
-from lstm_predictions_log import append_lstm_predictions_log
 from account_strategy import apply_account_decay_and_rank
 from ranked_opportunities_log import append_ranked_opportunities_log
 from trader import execute_best_trade
@@ -370,12 +369,6 @@ def run_one_cycle(
     print(f"[{utc_now_str()}] Sentiment log appended rows: {appended_count}")
 
     lstm_predictions = get_lstm_predictions(SYMBOLS)
-
-    prediction_rows = append_lstm_predictions_log(
-        lstm_predictions=lstm_predictions,
-        cycle_time_utc=datetime.now(UTC_TZ).isoformat(),
-    )
-    print(f"[{utc_now_str()}] LSTM predictions log appended rows: {prediction_rows}")
 
     # --------------------------------------------------
     # 2. Run account-specific strategy logic

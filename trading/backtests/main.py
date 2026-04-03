@@ -8,6 +8,7 @@ import pandas as pd
 
 from config import SYMBOLS, ACCOUNTS, MAX_HOLD_MINUTES
 from sentiment import compute_sentiment_scores
+from sentiment_log import load_logged_sentiment_urls, append_sentiment_log
 from account_strategy import apply_account_decay_and_rank
 
 from backtest_data import (
@@ -26,17 +27,17 @@ from backtest_broker import (
     mark_account_equity,
 )
 from backtest_logs import (
-    append_lstm_predictions_backtest_log,
     append_ranked_opportunities_backtest_log,
     save_backtest_results,
 )
 
-YEAR = 2023
+YEAR = 2024
 
 UTC = timezone.utc
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data/cleaned_data"
-OUTPUT_DIR = BASE_DIR / f"data/backtest_output_{YEAR}"
+DATA_DIR = BASE_DIR / "data/input_cleaned_data"
+OUTPUT_DIR = BASE_DIR / f"data/output_backtest_{YEAR}"
+SENTIMENT_LOG_FILE = OUTPUT_DIR / "sentiment_log.csv"
 
 PRICES_FILE = DATA_DIR / f"cleaned_prices_{YEAR}.csv"
 NEWS_FILES = [
@@ -124,8 +125,8 @@ def run_one_cycle(
     prices_m5_df: pd.DataFrame,
     news_df: pd.DataFrame,
     account_states: list[dict[str, Any]],
-    lstm_log_rows: list[dict[str, Any]],
     ranked_log_rows: list[dict[str, Any]],
+    logged_sentiment_urls: set[str],
 ) -> None:
     print(f"\nRunning M15 signal cycle at {current_time}")
 
@@ -138,16 +139,17 @@ def run_one_cycle(
 
     sentiment_scores = compute_sentiment_scores(news_by_symbol)
 
+    append_sentiment_log(
+        scored_news_by_symbol=sentiment_scores,
+        logged_urls=logged_sentiment_urls,
+        logged_at_utc=current_time.isoformat(),
+        log_file=SENTIMENT_LOG_FILE,
+    )
+
     lstm_predictions = get_lstm_predictions_from_history(
         symbols=SYMBOLS,
         prices_df=prices_m15_df,
         current_time=current_time,
-    )
-
-    append_lstm_predictions_backtest_log(
-        lstm_predictions=lstm_predictions,
-        cycle_time_utc=current_time,
-        rows_accumulator=lstm_log_rows,
     )
 
     for account_state in account_states:
@@ -194,6 +196,7 @@ def main() -> None:
     ranked_log_rows: list[dict[str, Any]] = []
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    logged_sentiment_urls = load_logged_sentiment_urls(log_file=SENTIMENT_LOG_FILE)
 
     for current_time in m5_calendar:
         try:
@@ -210,8 +213,8 @@ def main() -> None:
                     prices_m5_df=prices_m5_df,
                     news_df=news_df,
                     account_states=account_states,
-                    lstm_log_rows=lstm_log_rows,
                     ranked_log_rows=ranked_log_rows,
+                    logged_sentiment_urls=logged_sentiment_urls,
                 )
 
             persist_results(

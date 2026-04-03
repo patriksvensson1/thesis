@@ -4,12 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-SENTIMENT_LOG_FILE = DATA_DIR / "sentiment_log.csv"
-
-
-def ensure_sentiment_log_file(log_file: Path = SENTIMENT_LOG_FILE) -> None:
+def ensure_sentiment_log_file(log_file: Path) -> None:
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
     if not log_file.exists():
@@ -29,7 +24,7 @@ def ensure_sentiment_log_file(log_file: Path = SENTIMENT_LOG_FILE) -> None:
         ]).to_csv(log_file, index=False)
 
 
-def load_logged_sentiment_urls(log_file: Path = SENTIMENT_LOG_FILE) -> set[str]:
+def load_logged_sentiment_urls(log_file: Path) -> set[str]:
     ensure_sentiment_log_file(log_file)
 
     try:
@@ -43,7 +38,7 @@ def append_sentiment_log(
     scored_news_by_symbol: dict[str, list[dict]],
     logged_urls: set[str],
     logged_at_utc: str,
-    log_file: Path = SENTIMENT_LOG_FILE,
+    log_file: Path,
 ) -> int:
     ensure_sentiment_log_file(log_file)
 
