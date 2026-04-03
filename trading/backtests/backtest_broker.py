@@ -90,6 +90,18 @@ def _get_next_bar(
 
     return rows.iloc[0]
 
+def _get_last_bar(
+    prices_df: pd.DataFrame,
+    symbol: str,
+) -> pd.Series | None:
+    rows = prices_df[
+        prices_df["symbol"] == symbol
+    ].sort_values("time")
+
+    if rows.empty:
+        return None
+
+    return rows.iloc[-1]
 
 def _calculate_sl_tp(entry_price: float, action: str) -> tuple[float, float]:
     if action == "buy":
@@ -228,6 +240,36 @@ def close_expired_positions_for_account(
 
         exit_price = float(bar["open"])
         _close_position(account_state, pos, current_time, exit_price, "max_hold")
+
+    account_state["open_positions"] = still_open
+
+def close_all_open_positions_at_end(
+    account_state: dict[str, Any],
+    prices_df: pd.DataFrame,
+) -> None:
+    """
+    Force-close any remaining open positions at the last available M5 close
+    for each symbol. Exit reason is end_of_year.
+    """
+    still_open: list[dict[str, Any]] = []
+
+    for pos in account_state["open_positions"]:
+        last_bar = _get_last_bar(prices_df, pos["symbol"])
+
+        if last_bar is None:
+            still_open.append(pos)
+            continue
+
+        exit_time = pd.Timestamp(last_bar["time"])
+        exit_price = float(last_bar["close"])
+
+        _close_position(
+            account_state=account_state,
+            pos=pos,
+            exit_time=exit_time,
+            exit_price=exit_price,
+            reason="end_of_year",
+        )
 
     account_state["open_positions"] = still_open
 

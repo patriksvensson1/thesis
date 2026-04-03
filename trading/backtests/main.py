@@ -25,13 +25,14 @@ from backtest_broker import (
     close_positions_hit_sl_tp,
     execute_best_trade_backtest,
     mark_account_equity,
+    close_all_open_positions_at_end,
 )
 from backtest_logs import (
     append_ranked_opportunities_backtest_log,
     save_backtest_results,
 )
 
-YEAR = 2024
+YEAR = 2022
 
 UTC = timezone.utc
 BASE_DIR = Path(__file__).resolve().parent
@@ -236,6 +237,20 @@ def main() -> None:
                 )
             except Exception as save_error:
                 print(f"Failed to save partial results at {current_time}: {save_error}")
+
+    # Closing open positions at the very end of the backtest year
+    final_time = m5_calendar[-1]
+    for account_state in account_states:
+        close_all_open_positions_at_end(
+            account_state=account_state,
+            prices_df=prices_m5_df,
+        )
+
+        mark_account_equity(
+            account_state=account_state,
+            current_time=final_time,
+            prices_df=prices_m5_df,
+        )
 
     persist_results(
         output_dir=OUTPUT_DIR,
