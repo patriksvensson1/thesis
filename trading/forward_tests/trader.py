@@ -1,6 +1,7 @@
 import csv
 import time
 from pathlib import Path
+from datetime import datetime, timezone
 
 import MetaTrader5 as mt5
 
@@ -43,14 +44,18 @@ def _format_retcode(result) -> str:
     return f"{retcode} ({retcode_name})"
 
 
+def _utc_now_str() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
 def _append_failed_trade_log(message: str) -> None:
     file_exists = FAILED_TRADES_LOG_FILE.exists()
 
     with open(FAILED_TRADES_LOG_FILE, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if not file_exists:
-            writer.writerow(["message"])
-        writer.writerow([message])
+            writer.writerow(["timestamp_utc", "message"])
+        writer.writerow([_utc_now_str(), message])
 
 
 def get_account_key(account: dict) -> str:
