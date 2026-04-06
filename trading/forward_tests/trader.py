@@ -1,4 +1,7 @@
+import csv
 import time
+from pathlib import Path
+
 import MetaTrader5 as mt5
 
 STOP_LOSS_PCT = 0.003
@@ -7,6 +10,11 @@ MAX_OPEN_TRADES = 8
 MAX_TOTAL_RISK_PCT = 0.01
 DEVIATION = 20
 STRATEGY_ID = 20260319
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+FAILED_TRADES_LOG_FILE = DATA_DIR / "failed_trades_log.csv"
 
 
 def _build_retcode_name_map() -> dict[int, str]:
@@ -33,6 +41,16 @@ def _format_retcode(result) -> str:
     if comment:
         return f"{retcode} ({retcode_name}) | comment={comment}"
     return f"{retcode} ({retcode_name})"
+
+
+def _append_failed_trade_log(message: str) -> None:
+    file_exists = FAILED_TRADES_LOG_FILE.exists()
+
+    with open(FAILED_TRADES_LOG_FILE, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["message"])
+        writer.writerow([message])
 
 
 def get_account_key(account: dict) -> str:
@@ -237,10 +255,12 @@ def execute_best_trade(
         return
 
     if result.retcode != mt5.TRADE_RETCODE_DONE:
-        print(
+        message = (
             f"Trade failed for {account['name']} | "
             f"symbol={symbol} | action={action} | {_format_retcode(result)}"
         )
+        print(message)
+        _append_failed_trade_log(message)
         return
 
     _record_new_trade_open_time(
