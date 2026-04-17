@@ -1,0 +1,105 @@
+2026-04-06 14:08:23 UTC,Trade failed for account_2_decay | symbol=NFLX.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-06 15:08:28 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:22:26 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:22:28 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:38:07 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:38:08 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:51:55 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 15:52:00 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 16:20:53 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 16:20:54 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 16:51:25 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 16:51:27 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 17:53:04 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 17:53:05 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:08:14 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:08:16 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:22:33 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:22:34 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:54:18 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 18:54:20 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:24:52 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:24:54 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:37:58 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:38:00 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:54:55 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 19:54:57 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-06 20:10:38 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-06 20:10:39 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-07 18:24:14 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 18:24:15 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 18:44:39 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 18:44:40 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 19:00:07 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 19:00:08 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-07 19:25:35 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=sell | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-07 19:44:39 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-07 20:11:42 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-07 20:11:43 UTC,Trade failed for account_2_decay | symbol=AMZN.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-08 14:39:31 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-08 15:08:48 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-08 15:22:16 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-08 16:38:30 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 16:38:31 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:11:21 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:25:21 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:25:26 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:40:41 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:40:42 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:55:13 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 19:55:14 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 20:11:22 UTC,Trade failed for account_1_no_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-08 20:11:23 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-09 14:25:27 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-09 14:25:28 UTC,Trade failed for account_2_decay | symbol=PYPL.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-09 20:07:52 UTC,Trade failed for account_1_no_decay | symbol=AMD.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-09 20:07:54 UTC,Trade failed for account_2_decay | symbol=AMD.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-10 13:37:17 UTC,Trade failed for account_2_decay | symbol=AMD.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-10 14:08:41 UTC,Trade failed for account_2_decay | symbol=TSLA.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-10 16:21:31 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-10 19:23:04 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-10 19:23:05 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-10 19:52:59 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-10 19:53:29 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-10 20:08:44 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-10 20:08:45 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-13 14:38:36 UTC,Trade failed for account_2_decay | symbol=MSFT.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-13 17:25:49 UTC,Trade failed for account_1_no_decay | symbol=PYPL.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-13 20:09:42 UTC,Trade failed for account_1_no_decay | symbol=AMZN.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-13 20:09:43 UTC,Trade failed for account_2_decay | symbol=AMZN.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-14 13:39:49 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-14 16:08:06 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:23:41 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:23:43 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:38:08 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:38:09 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:54:09 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 16:54:14 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 17:10:30 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 17:10:31 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 17:25:03 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 17:25:05 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:09:40 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:25:28 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:25:29 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:41:02 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:41:03 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:54:17 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 19:54:18 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-14 20:12:34 UTC,Trade failed for account_1_no_decay | symbol=NDAQ.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-14 20:12:35 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-15 13:39:32 UTC,Trade failed for account_2_decay | symbol=NDAQ.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-15 16:43:38 UTC,Trade failed for account_2_decay | symbol=TSLA.NAS | action=sell | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-15 18:10:33 UTC,Trade failed for account_2_decay | symbol=ADBE.NAS | action=buy | 10044 (TRADE_RETCODE_CLOSE_ONLY) | comment=Only position closing is allowed
+2026-04-15 20:11:12 UTC,Trade failed for account_2_decay | symbol=AAPL.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-16 13:41:23 UTC,Trade failed for account_2_decay | symbol=NVDA.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
+2026-04-16 15:40:05 UTC,Trade failed for account_1_no_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-16 15:52:50 UTC,Trade failed for account_1_no_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-16 16:10:01 UTC,Trade failed for account_1_no_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-16 16:10:03 UTC,Trade failed for account_2_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-16 20:11:32 UTC,Trade failed for account_1_no_decay | symbol=AMD.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-16 20:11:34 UTC,Trade failed for account_2_decay | symbol=AMD.NAS | action=buy | 10018 (TRADE_RETCODE_MARKET_CLOSED) | comment=Market closed
+2026-04-17 14:23:06 UTC,Trade failed for account_1_no_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-17 14:23:07 UTC,Trade failed for account_2_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-17 14:53:31 UTC,Trade failed for account_2_decay | symbol=NKE.NYSE | action=buy | 10034 (TRADE_RETCODE_LIMIT_VOLUME) | comment=Volume limit reached
+2026-04-17 15:24:49 UTC,Trade failed for account_2_decay | symbol=NFLX.NAS | action=buy | 10016 (TRADE_RETCODE_INVALID_STOPS) | comment=Invalid stops
